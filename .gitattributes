@@ -1,4 +1,4 @@
-###############################################################################
+﻿###############################################################################
 # GLOBAL NORMALIZATION
 ###############################################################################
 
@@ -49,9 +49,12 @@
 # These formats are used by CI/CD, Docker, Node, Python, Kubernetes, GitHub
 # Actions, and Linux tooling. CRLF can break parsers or cause subtle bugs.
 
-*.sh        text eol=lf        # Prevents /bin/bash^M errors
-Dockerfile  text eol=lf        # Docker build expects LF
-*.dockerfile text eol=lf       # Nonstandard but included for safety
+# Prevents /bin/bash^M errors
+*.sh        text eol=lf
+# Docker build expects LF
+Dockerfile  text eol=lf
+# Nonstandard but included for safety
+*.dockerfile text eol=lf
 *.yml       text eol=lf
 *.yaml      text eol=lf
 *.json      text eol=lf
@@ -161,4 +164,5 @@ Dockerfile  text eol=lf        # Docker build expects LF
 *.ai    binary
 *.sketch binary
 *.fig   binary
-*.drawio binary   # Often XML but contains embedded binary data; safest as binary
+# Often XML but contains embedded binary data; safest as binary
+*.drawio binary
