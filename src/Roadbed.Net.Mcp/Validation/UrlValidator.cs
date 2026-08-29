@@ -112,6 +112,13 @@ internal static class UrlValidator
             return RefusalReasons.AuthorityHasUserInfo;
         }
 
+        // 8a  an IPv6 literal is tested ahead of the colon rule so that "[::1]" is named as
+        //     the IP literal it is rather than as a stray port. Same refusal either way.
+        if (authority[0] == '[')
+        {
+            return RefusalReasons.AuthorityIsIpLiteral;
+        }
+
         // 6  authority contains ':' - no explicit ports
         if (authority.Contains(':', StringComparison.Ordinal))
         {
@@ -125,10 +132,9 @@ internal static class UrlValidator
             return RefusalReasons.AuthorityHasEscapeOrBackslash;
         }
 
-        // 8  authority all [0-9.] OR starts '[' OR starts '0x'
+        // 8  authority all [0-9.] OR starts '0x' (the '[' case is handled at 8a above)
         //    kills 10.0.0.1  2130706433  0x7f000001  [::1]
         if (IsAllDigitsAndDots(authority)
-            || authority[0] == '['
             || authority.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
         {
             return RefusalReasons.AuthorityIsIpLiteral;

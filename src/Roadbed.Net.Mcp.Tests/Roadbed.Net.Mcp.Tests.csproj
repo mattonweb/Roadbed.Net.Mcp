@@ -15,6 +15,14 @@
     <PackageReference Include="MSTest.TestFramework" Version="4.2.3" />
   </ItemGroup>
 
+  <!-- The blocked and empty-but-legitimate fixtures. They live in the repo as real files so
+       the pair can be read side by side and corrected as bot walls change. -->
+  <ItemGroup>
+    <Content Include="Fixtures\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Roadbed.Net.Mcp\Roadbed.Net.Mcp.csproj" />
   </ItemGroup>
