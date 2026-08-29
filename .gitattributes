@@ -1,0 +1,164 @@
+###############################################################################
+# GLOBAL NORMALIZATION
+###############################################################################
+
+# Let Git auto-detect text files and normalize them to LF in the repo.
+# This avoids corruption of cross-platform files (YAML, JSON, Dockerfile, sh).
+# Developers on Windows still get CRLF locally if core.autocrlf=true.
+* text=auto
+
+###############################################################################
+# WINDOWS-SPECIFIC TEXT FILES (FORCE CRLF)
+###############################################################################
+# These file types are Windows-native and EXPECT CRLF. Forcing CRLF avoids
+# noisy diffs and prevents Visual Studio from rewriting line endings constantly.
+
+*.cs        text eol=crlf
+*.vb        text eol=crlf
+*.sln       text eol=crlf
+*.cmd       text eol=crlf
+*.bat       text eol=crlf
+*.ps1       text eol=crlf
+*.psm1      text eol=crlf
+*.psd1      text eol=crlf
+*.ps1xml    text eol=crlf
+
+# Visual Studio project files (XML-based but Windows-native)
+*.csproj    text eol=crlf
+*.vbproj    text eol=crlf
+*.props     text eol=crlf
+*.targets   text eol=crlf
+*.vcxproj   text eol=crlf
+*.vcxproj.filters text eol=crlf
+*.vcxitems  text eol=crlf
+*.vcxitems.filters text eol=crlf
+*.vssettings text eol=crlf
+*.vstemplate text eol=crlf
+*.resx      text eol=crlf
+*.runsettings text eol=crlf
+*.vsixmanifest text eol=crlf
+
+# User-specific Visual Studio files (Windows-only)
+*.user      text eol=crlf
+*.csproj.user text eol=crlf
+*.vbproj.user text eol=crlf
+
+###############################################################################
+# CROSS-PLATFORM TEXT FILES (FORCE LF)
+###############################################################################
+# These formats are used by CI/CD, Docker, Node, Python, Kubernetes, GitHub
+# Actions, and Linux tooling. CRLF can break parsers or cause subtle bugs.
+
+*.sh        text eol=lf        # Prevents /bin/bash^M errors
+Dockerfile  text eol=lf        # Docker build expects LF
+*.dockerfile text eol=lf       # Nonstandard but included for safety
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.json      text eol=lf
+*.jsonc     text eol=lf
+*.toml      text eol=lf
+*.graphql   text eol=lf
+*.gql       text eol=lf
+
+# Git configuration files should always be LF to avoid recursion issues
+.gitattributes text eol=lf
+.gitignore     text eol=lf
+.gitmodules    text eol=lf
+.editorconfig  text eol=lf
+
+# Markdown is cross-platform; LF avoids noisy diffs in OSS tooling
+*.md        text eol=lf
+*.markdown  text eol=lf
+
+###############################################################################
+# OTHER TEXT FORMATS (SAFE AS LF)
+###############################################################################
+# These are universally consumed across platforms; LF is safest.
+
+*.txt       text eol=lf
+*.csv       text eol=lf
+*.tsv       text eol=lf
+*.sql       text eol=lf
+*.xml       text eol=lf
+*.xaml      text eol=lf
+*.xsd       text eol=lf
+*.xsl       text eol=lf
+*.xslt      text eol=lf
+*.svg       text eol=lf
+*.htm       text eol=lf
+*.html      text eol=lf
+*.cfg       text eol=lf
+*.ini       text eol=lf
+*.config    text eol=lf
+*.sitemap   text eol=lf
+*.log       text eol=lf
+*.vtt       text eol=lf
+*.srt       text eol=lf
+*.ics       text eol=lf
+
+###############################################################################
+# BINARY FILES
+###############################################################################
+# Explicitly mark binaries so Git NEVER attempts line-ending normalization.
+# This prevents corruption and keeps diffs clean.
+
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.bmp   binary
+*.ico   binary
+*.tif   binary
+*.tiff  binary
+*.webp  binary
+*.avif  binary
+*.heic  binary
+
+*.zip   binary
+*.7z    binary
+*.rar   binary
+*.tar   binary
+*.gz    binary
+*.tgz   binary
+*.bz2   binary
+*.xz    binary
+
+*.exe   binary
+*.dll   binary
+*.pdb   binary
+*.lib   binary
+*.so    binary
+*.dylib binary
+*.msi   binary
+*.msix  binary
+*.appx  binary
+*.appxbundle binary
+*.cab   binary
+*.iso   binary
+
+*.bin   binary
+*.dat   binary
+*.pak   binary
+*.nupkg binary
+*.snupkg binary
+*.wasm  binary
+
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.eot   binary
+
+*.mp3   binary
+*.mp4   binary
+*.mov   binary
+*.avi   binary
+*.m4a   binary
+*.wav   binary
+
+# Design assets
+*.psd   binary
+*.ai    binary
+*.sketch binary
+*.fig   binary
+*.drawio binary   # Often XML but contains embedded binary data; safest as binary
