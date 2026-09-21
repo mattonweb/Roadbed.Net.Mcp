@@ -28,6 +28,15 @@ internal seat name beyond what this working agreement already uses, or anything 
 infrastructure — that includes the hub's address. The MCP client config (`.mcp.json`) is gitignored for that
 reason, and its shape is not documented here; Matt places it per machine.
 
+## Session start — get current before you claim anything
+
+At session start, before claiming any message: run `git fetch origin`, then `git status -sb`. If you are on
+`main` with a clean tree and it is behind `origin/main`, run `git pull --ff-only`, which can only fast-forward
+and creates no history. If you are on any other branch, the tree is dirty, or the fast-forward is refused,
+**stop and say so in your first message**: name the branch and what `git status` showed. Never merge, rebase
+or reset to get current; that is Matt's call. ⛔ This changes nothing about commits and pushes: **you still
+never commit and never push.** (Co-Founder, 2026-09-21, ruled by Matt.)
+
 ## The Agent Communication Hub: how work reaches you
 
 - **At session start, claim your messages** on every hub tool family present in your session
