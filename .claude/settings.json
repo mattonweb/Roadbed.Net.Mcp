@@ -1,0 +1,68 @@
+{
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "async": true,
+            "timeout": 10,
+            "statusMessage": "Logging permission request",
+            "command": "mkdir -p \"$HOME/.claude/permission-logs\" && { printf '{\"ts\":\"%s\",\"agent\":\"%s\",\"payload\":' \"$(date -Iseconds)\" \"$(basename \"$CLAUDE_PROJECT_DIR\")\"; tr -d '\n'; printf '}\n'; } >> \"$HOME/.claude/permission-logs/$(basename \"$CLAUDE_PROJECT_DIR\").jsonl\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "mcp__hub-cto-hub__hub_claim_messages",
+      "mcp__hub-cto-hub__hub_respond",
+      "mcp__hub-cto-hub__hub_send",
+      "mcp__hub-cto-hub__hub_sent",
+      "mcp__hub-cto-hub__hub_roster",
+      "mcp__hub-cto-hub__hub_get_attachment",
+      "Bash(awk:*)",
+      "Bash(cat:*)",
+      "Bash(cd:*)",
+      "Bash(comm:*)",
+      "Bash(cut:*)",
+      "Bash(diff:*)",
+      "Bash(dotnet --info)",
+      "Bash(dotnet --version)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(echo:*)",
+      "Bash(file:*)",
+      "Bash(find:*)",
+      "Bash(git:*)",
+      "Bash(grep:*)",
+      "Bash(head:*)",
+      "Bash(join:*)",
+      "Bash(ls:*)",
+      "Bash(netstat:*)",
+      "Bash(od:*)",
+      "Bash(printf:*)",
+      "Bash(sort:*)",
+      "Bash(tail:*)",
+      "Bash(tr:*)",
+      "Bash(uniq:*)",
+      "Bash(unzip -p:*)",
+      "Bash(wc:*)",
+      "PowerShell(Get-NetTCPConnection:*)",
+      "PowerShell(Get-Process:*)",
+      "PowerShell(Select-Object:*)",
+      "PowerShell(dotnet build:*)",
+      "PowerShell(dotnet test:*)"
+    ],
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/secrets/**)",
+      "Bash(cat secrets:*)",
+      "Bash(cat .env:*)"
+    ]
+  }
+}
