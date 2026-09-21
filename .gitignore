@@ -427,3 +427,9 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Claude Code local state and the MCP client config, which carries a live hub bearer key - never commit (Co-Founder, 2026-09-21)
+.claude/settings.local.json
+.claude/worktrees/
+.claude/sessions/
+.mcp.json
