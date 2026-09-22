@@ -73,13 +73,15 @@ product's use case, it does not belong here.
 | `outcome` | enum | See §7. Never inferred by the caller from `status` alone. |
 | `requestedUrl` | string | Exactly what was asked for. |
 | `finalUrl` | string | After redirects. **May differ; callers must read this one.** |
-| `redirectCount` | int | |
+| `redirectCount` | int | Hops **followed**. A refusal at the first hop reports 0, which does not mean no redirect happened. |
 | `status` | int? | HTTP status of the final response. Null when nothing was sent. |
 | `contentType` | string? | As the server declared it. Not trusted, not enforced. |
 | `contentLength` | int | Bytes actually returned. |
 | `body` | string | **The raw response body.** See below. |
 | `truncated` | bool | True when the size cap stopped the read. |
 | `refusalReason` | string? | Present when `outcome` is `refused`; names the rule. |
+| `refusedUrl` | string? | Present when `outcome` is `refused`; the URL the rule was applied to. On a redirect refusal it is the declined hop in **resolved absolute form**, not the raw `Location` header and not `requestedUrl`/`finalUrl`, which both still name a URL that passed. |
+| `refusalStage` | string? | Present when `outcome` is `refused`; `request` only when the refused URL is the caller's own and no hop was followed, otherwise `redirect`. The reason alone cannot separate the two: an `http://` hop and an `http://` request both yield `scheme_not_https`. |
 
 *** `body` IS THE RAW RESPONSE. NOT A RENDERED DOM, EVER. *** This is the single
 most important line in the document. A consumer reasoning about post-JavaScript

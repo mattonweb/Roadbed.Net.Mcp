@@ -59,6 +59,77 @@ public sealed class FetchServiceTests
     }
 
     [TestMethod]
+    public async Task RedirectToPlainHttp_NamesTheHopItDeclined()
+    {
+        // The defect this pins: the reason string here is identical to the one a caller's
+        // own http:// URL earns, finalUrl is still the clean https URL the caller asked
+        // for, and redirectCount is 0 because the hop was never followed. Read together
+        // those three said "your valid https URL was refused for no reason". The stage and
+        // the refused URL are what make the http:// hop visible.
+        var handler = new StubHttpMessageHandler()
+            .RouteRedirect("https://start.example.com/", HttpStatusCode.MovedPermanently, "http://start.example.com/");
+
+        var result = await TestFactory.Fetcher(handler, new StubAddressResolver())
+            .GetAsync("https://start.example.com/");
+
+        Assert.AreEqual("http://start.example.com/", result.RefusedUrl);
+        Assert.AreEqual(RefusalStages.Redirect, result.RefusalStage);
+
+        // Unchanged, and deliberately so - operator seats read these today.
+        Assert.AreEqual(RefusalReasons.SchemeNotHttps, result.RefusalReason);
+        Assert.AreEqual(0, result.RedirectCount);
+        Assert.AreEqual("https://start.example.com/", result.FinalUrl);
+    }
+
+    [TestMethod]
+    public async Task ACallersOwnBadUrl_IsStagedAsTheRequest()
+    {
+        // Same refusalReason as the test above, from the opposite cause. The stage is the
+        // only field that separates them.
+        var result = await TestFactory.Fetcher(new StubHttpMessageHandler(), new StubAddressResolver())
+            .GetAsync("http://example.com/");
+
+        Assert.AreEqual(RefusalReasons.SchemeNotHttps, result.RefusalReason);
+        Assert.AreEqual(RefusalStages.Request, result.RefusalStage);
+        Assert.AreEqual("http://example.com/", result.RefusedUrl);
+    }
+
+    [TestMethod]
+    public async Task ARefusedRelativeHop_ReportsTheResolvedUrlNotTheRawHeader()
+    {
+        // The Location header reads "//10.0.0.1/x". Handing that back would tell an
+        // operator nothing; the URL the gate actually judged is the absolute form.
+        var handler = new StubHttpMessageHandler()
+            .RouteRedirect("https://example.com/a", HttpStatusCode.Found, "//10.0.0.1/x");
+
+        var result = await TestFactory.Fetcher(handler, new StubAddressResolver())
+            .GetAsync("https://example.com/a");
+
+        Assert.AreEqual(FetchOutcome.Refused, result.Outcome);
+        Assert.AreEqual(RefusalReasons.AuthorityIsIpLiteral, result.RefusalReason);
+        Assert.AreEqual("https://10.0.0.1/x", result.RefusedUrl);
+        Assert.AreEqual(RefusalStages.Redirect, result.RefusalStage);
+    }
+
+    [TestMethod]
+    public async Task AHopRefusedAfterOneFollowedHop_CountsThatHop()
+    {
+        // Pins the increment ordering that made the defect invisible: redirectCount counts
+        // hops FOLLOWED, so it is 1 here and 0 when the first hop is the refused one.
+        var handler = new StubHttpMessageHandler()
+            .RouteRedirect("https://start.example.com/", HttpStatusCode.Found, "https://second.example.com/a")
+            .RouteRedirect("https://second.example.com/a", HttpStatusCode.Found, "http://second.example.com/b");
+
+        var result = await TestFactory.Fetcher(handler, new StubAddressResolver())
+            .GetAsync("https://start.example.com/");
+
+        Assert.AreEqual(FetchOutcome.Refused, result.Outcome);
+        Assert.AreEqual(RefusalStages.Redirect, result.RefusalStage);
+        Assert.AreEqual("http://second.example.com/b", result.RefusedUrl);
+        Assert.AreEqual(1, result.RedirectCount);
+    }
+
+    [TestMethod]
     public async Task RedirectToAnIpLiteral_IsRefusedByTheStringGate()
     {
         var handler = new StubHttpMessageHandler()

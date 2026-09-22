@@ -31,13 +31,15 @@ path uniform, observable and bounded.
 | `outcome` | `ok`, `refused`, `blocked`, `notFound`, `error`, `throttled`. **Read this, not `status`.** |
 | `requestedUrl` | Exactly what was asked for. |
 | `finalUrl` | After redirects. May differ; read this one. |
-| `redirectCount` | |
+| `redirectCount` | Hops **followed**. A refusal at the first hop reports 0, which does not mean no redirect happened. |
 | `status` | HTTP status of the final response. Null when nothing was sent. |
 | `contentType` | As the server declared it. Not trusted, not enforced. |
 | `contentLength` | Body bytes read off the wire. |
 | `body` | The **raw** response. Textual types decoded; everything else base64. |
 | `truncated` | True when the size cap stopped the read. |
 | `refusalReason` | Names the rule, when `outcome` is `refused`. |
+| `refusedUrl` | The URL that rule was applied to, when `outcome` is `refused`. On a redirect refusal this is the declined hop, resolved to absolute form - **not** `requestedUrl` or `finalUrl`, which both still name a URL that passed. |
+| `refusalStage` | `request` or `redirect`, when `outcome` is `refused`. |
 
 `blocked` means a bot wall answered — which is **not** the same as a page with nothing on
 it. Both arrive as HTTP 200 with valid markup, and a caller that conflates them records

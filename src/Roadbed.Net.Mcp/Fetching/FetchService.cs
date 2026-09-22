@@ -78,7 +78,7 @@ internal sealed class FetchService : BaseClassWithLogging, IFetchService
         // ZONE 1 + ZONE 2 on what the caller supplied.
         if (!UrlValidator.TryValidate(url, out var target, out var refusalReason))
         {
-            return Refuse(result, refusalReason!);
+            return Refuse(result, refusalReason!, result.RequestedUrl, RefusalStages.Request);
         }
 
         var charged = false;
@@ -100,7 +100,7 @@ internal sealed class FetchService : BaseClassWithLogging, IFetchService
                     target.Host,
                     destinationRefusal);
 
-                return Refuse(result, destinationRefusal);
+                return Refuse(result, destinationRefusal, target.AbsoluteUri, StageOf(result));
             }
 
             if (this._hostSpacing.IsCircuitOpen(target.Host))
@@ -153,10 +153,19 @@ internal sealed class FetchService : BaseClassWithLogging, IFetchService
                     // least: it re-enters zone 1 and then zone 3, exactly like the original.
                     if (result.RedirectCount >= this._config.MaxRedirects)
                     {
-                        return Refuse(result, RefusalReasons.RedirectLimitExceeded);
+                        return Refuse(
+                            result,
+                            RefusalReasons.RedirectLimitExceeded,
+                            target.AbsoluteUri,
+                            RefusalStages.Redirect);
                     }
 
-                    if (!TryResolveRedirect(target, location, out var next, out var locationRefusal))
+                    if (!TryResolveRedirect(
+                        target,
+                        location,
+                        out var next,
+                        out var resolvedLocation,
+                        out var locationRefusal))
                     {
                         this.LogWarning(
                             "Refused a redirect from {Url} to {Location}: {Reason}",
@@ -164,7 +173,9 @@ internal sealed class FetchService : BaseClassWithLogging, IFetchService
                             location,
                             locationRefusal!);
 
-                        return Refuse(result, locationRefusal!);
+                        // The RESOLVED hop, not the raw header: a relative Location reads as
+                        // "/b/c", which tells an operator nothing about where it pointed.
+                        return Refuse(result, locationRefusal!, resolvedLocation, RefusalStages.Redirect);
                     }
 
                     this._hostSpacing.RecordSuccess(target.Host);
@@ -175,7 +186,11 @@ internal sealed class FetchService : BaseClassWithLogging, IFetchService
 
                 if (IsRedirectStatus(response.StatusCode))
                 {
-                    return Refuse(result, RefusalReasons.RedirectWithoutLocation);
+                    return Refuse(
+                        result,
+                        RefusalReasons.RedirectWithoutLocation,
+                        target.AbsoluteUri,
+                        StageOf(result));
                 }
 
                 return await this.CompleteAsync(result, target, response, cancellationToken).ConfigureAwait(false);
@@ -187,12 +202,28 @@ internal sealed class FetchService : BaseClassWithLogging, IFetchService
 
     #region Private Methods
 
-    private static GetResult Refuse(GetResult result, string refusalReason)
+    private static GetResult Refuse(
+        GetResult result,
+        string refusalReason,
+        string refusedUrl,
+        string refusalStage)
     {
         result.Ok = false;
         result.Outcome = FetchOutcome.Refused;
         result.RefusalReason = refusalReason;
+
+        // The reason alone names a rule, not a URL, and the same rule refuses the caller's
+        // own URL and a hop the server sent. These two say which.
+        result.RefusedUrl = refusedUrl;
+        result.RefusalStage = refusalStage;
         return result;
+    }
+
+    // `request` only while the URL in hand is still the one the caller supplied. Once a hop
+    // has been followed, every refusal belongs to the redirect chain.
+    private static string StageOf(GetResult result)
+    {
+        return result.RedirectCount == 0 ? RefusalStages.Request : RefusalStages.Redirect;
     }
 
     private static GetResult Throttle(GetResult result)
@@ -222,7 +253,12 @@ internal sealed class FetchService : BaseClassWithLogging, IFetchService
         return string.IsNullOrWhiteSpace(location) ? null : location;
     }
 
-    private static bool TryResolveRedirect(Uri current, string location, out Uri? next, out string? refusalReason)
+    private static bool TryResolveRedirect(
+        Uri current,
+        string location,
+        out Uri? next,
+        out string resolvedLocation,
+        out string? refusalReason)
     {
         next = null;
 
@@ -232,9 +268,16 @@ internal sealed class FetchService : BaseClassWithLogging, IFetchService
         // more trust than an absolute one.
         if (!Uri.TryCreate(current, location, out var absolute))
         {
+            // Nothing absolute exists to report, so the raw header is the most specific
+            // thing there is to hand back.
+            resolvedLocation = location;
             refusalReason = RefusalReasons.RedirectLocationUnresolvable;
             return false;
         }
+
+        // Assigned before the gates run, because the caller reports this URL when they
+        // refuse it.
+        resolvedLocation = absolute.AbsoluteUri;
 
         if (!UrlValidator.TryValidate(absolute.AbsoluteUri, out next, out refusalReason))
         {

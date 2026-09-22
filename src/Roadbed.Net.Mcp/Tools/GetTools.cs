@@ -28,7 +28,10 @@ public static class GetTools
         + "no cookies, no caching, and no link-following. The destination is validated before anything "
         + "is contacted and again at every redirect. Read 'outcome', not 'status': 'blocked' means a bot "
         + "wall answered, which is not the same as a page with nothing on it. Read 'finalUrl', not the "
-        + "URL you asked for. Calls are capped per session.")]
+        + "URL you asked for. On a refusal, 'refusalStage' says where it happened - 'redirect' means a hop "
+        + "the server sent was declined, and 'refusedUrl' names that hop, which is NOT the URL you asked "
+        + "for. 'redirectCount' counts hops FOLLOWED, so a refusal at the first hop reports 0: that does "
+        + "not mean no redirect happened. Calls are capped per session.")]
     public static async Task<string> Get(
         IFetchService fetchService,
         [Description("Absolute https:// URL. Must be a DNS host name on port 443 - no IP literals, no "

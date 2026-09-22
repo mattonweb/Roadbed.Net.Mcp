@@ -61,5 +61,30 @@ public sealed class GetResult
     [JsonPropertyName("refusalReason")]
     public string? RefusalReason { get; set; }
 
+    /// <summary>
+    /// Gets or sets the exact URL the refusing rule was applied to. Present when
+    /// <see cref="Outcome"/> is <c>refused</c>.
+    /// </summary>
+    /// <remarks>
+    /// On a redirect refusal this is the hop that was declined, resolved to absolute form,
+    /// and NOT <see cref="RequestedUrl"/> or <see cref="FinalUrl"/> - both of those still
+    /// name a URL that passed.
+    /// </remarks>
+    [JsonPropertyName("refusedUrl")]
+    public string? RefusedUrl { get; set; }
+
+    /// <summary>
+    /// Gets or sets where the refusal happened - <c>request</c> or <c>redirect</c>. Present
+    /// when <see cref="Outcome"/> is <c>refused</c>.
+    /// </summary>
+    /// <remarks>
+    /// <c>request</c> only when the refused URL is the one the caller supplied and no hop
+    /// has been followed; otherwise <c>redirect</c>. Without this a redirect refusal and a
+    /// bad caller URL hand back the same <see cref="RefusalReason"/> and cannot be told
+    /// apart.
+    /// </remarks>
+    [JsonPropertyName("refusalStage")]
+    public string? RefusalStage { get; set; }
+
     #endregion
 }
