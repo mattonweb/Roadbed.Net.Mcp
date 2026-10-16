@@ -1,4 +1,4 @@
-﻿###############################################################################
+###############################################################################
 # GLOBAL NORMALIZATION
 ###############################################################################
 
@@ -14,8 +14,12 @@
 # noisy diffs and prevents Visual Studio from rewriting line endings constantly.
 
 *.cs        text eol=crlf
+# Razor views are C#-authored in Visual Studio; 233 tracked across the repos had no rule (added 2026-10-04)
+*.cshtml    text eol=crlf
+*.razor     text eol=crlf
 *.vb        text eol=crlf
 *.sln       text eol=crlf
+*.slnx      text eol=crlf
 *.cmd       text eol=crlf
 *.bat       text eol=crlf
 *.ps1       text eol=crlf
@@ -51,6 +55,7 @@
 
 # Prevents /bin/bash^M errors
 *.sh        text eol=lf
+*.py        text eol=lf
 # Docker build expects LF
 Dockerfile  text eol=lf
 # Nonstandard but included for safety
@@ -79,8 +84,10 @@ Dockerfile  text eol=lf
 # These are universally consumed across platforms; LF is safest.
 
 *.txt       text eol=lf
-*.csv       text eol=lf
-*.tsv       text eol=lf
+# CSV and TSV are test fixtures and product samples: byte-exact, no line-ending conversion in either direction
+# (RFC 4180 is CRLF; LF-normalising a fixture changes what the test reads). -text keeps diffs, unlike binary. Ruled 2026-10-04.
+*.csv       -text
+*.tsv       -text
 *.sql       text eol=lf
 *.xml       text eol=lf
 *.xaml      text eol=lf
@@ -90,6 +97,12 @@ Dockerfile  text eol=lf
 *.svg       text eol=lf
 *.htm       text eol=lf
 *.html      text eol=lf
+# Browser assets, same family as html (added 2026-10-04)
+*.css       text eol=lf
+*.scss      text eol=lf
+*.js        text eol=lf
+*.mjs       text eol=lf
+*.ts        text eol=lf
 *.cfg       text eol=lf
 *.ini       text eol=lf
 *.config    text eol=lf
@@ -126,9 +139,27 @@ Dockerfile  text eol=lf
 *.bz2   binary
 *.xz    binary
 
+# Office documents are ZIP/OLE containers; mark binary so committed test
+# fixtures are never EOL-normalized (which corrupts them).
+*.xlsx  binary
+*.xlsb  binary
+*.xls   binary
+*.docx  binary
+*.doc   binary
+*.pptx  binary
+*.ppt   binary
+
 *.exe   binary
 *.dll   binary
 *.pdb   binary
+*.pdf   binary
+# Key material and local databases: never normalized if one is ever committed (the secrets scan should stop that first)
+*.pfx   binary
+*.snk   binary
+*.kdbx  binary
+*.db    binary
+*.sqlite binary
+*.sqlite3 binary
 *.lib   binary
 *.so    binary
 *.dylib binary
@@ -166,3 +197,6 @@ Dockerfile  text eol=lf
 *.fig   binary
 # Often XML but contains embedded binary data; safest as binary
 *.drawio binary
+*.pdn   binary
+*.pen   binary
+*.jfif  binary

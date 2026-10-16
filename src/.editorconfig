@@ -1,6 +1,40 @@
-# Remove the line below if you want to inherit .editorconfig settings from higher directories
+# Single source of truth for the house .editorconfig.
+#
+# This file governs Signalbox itself and is the canonical copy for every product repo: each one carries a
+# verbatim copy at src/.editorconfig. A copy that differs from this file is drift, and the fix is here first,
+# then re-copied; never edited in place downstream. Consolidated 2026-10-04 from five diverging copies.
+# Last changed: 2026-10-04.
+#
+# Cross-tool rule: StyleCop.Analyzers 1.1.118 runs with warnings as errors in every product repo, so where an
+# IDE style setting below and a StyleCop rule cover the same thing, this file states what StyleCop enforces.
+# A setting that disagrees with StyleCop is a document that lies to whoever reads it; the build never sees it.
+
 root = true
 
+[*]
+charset = utf-8
+# Line endings match .gitattributes: LF everywhere, CRLF only for the Visual Studio-authored types listed below.
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = 110
+
+# Fixtures: the editor must not alter a byte. Mirrors '*.csv -text' in .gitattributes.
+[*.{csv,tsv}]
+end_of_line = unset
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+# Visual Studio-authored types check out CRLF per .gitattributes; this list mirrors its CRLF section.
+[*.{cs,vb,cshtml,razor,sln,slnx,csproj,vbproj,props,targets,resx,runsettings,cmd,bat,ps1,psm1,psd1,ps1xml}]
+end_of_line = crlf
+
+# C# files: house style + analyzer overrides.
 # C# files
 [*.cs]
 
@@ -33,10 +67,11 @@ dotnet_sort_system_directives_first = true
 file_header_template = unset
 
 # this. and Me. preferences
-dotnet_style_qualification_for_event = false
-dotnet_style_qualification_for_field = false
-dotnet_style_qualification_for_method = false
-dotnet_style_qualification_for_property = false
+# 'this.' is required: StyleCop SA1101 is active and errors without it (aligned 2026-10-04; was false, against the code).
+dotnet_style_qualification_for_event = true
+dotnet_style_qualification_for_field = true
+dotnet_style_qualification_for_method = true
+dotnet_style_qualification_for_property = true
 
 # Language keywords vs BCL types preferences
 dotnet_style_predefined_type_for_locals_parameters_members = true
@@ -116,19 +151,24 @@ csharp_style_conditional_delegate_call = true
 # Modifier preferences
 csharp_prefer_static_anonymous_function = true
 csharp_prefer_static_local_function = true
+# 'required' FIRST while StyleCop.Analyzers is pinned at 1.1.118 (the latest stable, 2019). That version predates the keyword,
+# classifies it below every known modifier, and SA1206 fails the build on 'public required' (verified 2026-10-04: one flipped
+# declaration, 2 SA1206 errors). The 1.2.0-beta line classifies 'required' as an ordinary modifier and demands the opposite
+# order, 'public required'. The two orders are tied to the StyleCop version: flip this line in the same change that upgrades
+# the package, never separately. Corrects a same-day ruling that had read the newer StyleCop source, not the pinned build.
 csharp_preferred_modifier_order = required,public,private,protected,internal,file,static,extern,new,virtual,abstract,sealed,override,readonly,unsafe,volatile,async
 csharp_style_prefer_readonly_struct = true
 csharp_style_prefer_readonly_struct_member = true
 
 # Code-block preferences
 csharp_prefer_braces = true
-csharp_prefer_simple_using_statement = true
+csharp_prefer_simple_using_statement = false # Ruled 2026-10-07: using blocks with braces, never using declarations; the indentation shows the scope
 csharp_prefer_system_threading_lock = true
-csharp_style_namespace_declarations = block_scoped
+csharp_style_namespace_declarations = file_scoped # aligned 2026-10-04: every repo is file-scoped (was block_scoped, against the code)
 csharp_style_prefer_method_group_conversion = true
-csharp_style_prefer_primary_constructors = true
+csharp_style_prefer_primary_constructors = false # Ruled 2026-10-04: primary constructors on records only; behaviour classes validate in an explicit constructor
 csharp_style_prefer_simple_property_accessors = true
-csharp_style_prefer_top_level_statements = true
+csharp_style_prefer_top_level_statements = false # Ruled 2026-10-07: Program.cs keeps a documented class and Main; all 16 house entry points already do
 
 # Expression-level preferences
 csharp_prefer_simple_default_expression = true
@@ -148,7 +188,8 @@ csharp_style_unused_value_assignment_preference = discard_variable
 csharp_style_unused_value_expression_statement_preference = discard_variable
 
 # 'using' directive preferences
-csharp_using_directive_placement = outside_namespace
+# Usings go inside the (file-scoped) namespace: StyleCop SA1200 is active and errors otherwise (aligned 2026-10-04; was outside_namespace).
+csharp_using_directive_placement = inside_namespace
 
 # New line preferences
 csharp_style_allow_blank_line_after_colon_in_constructor_initializer_experimental = true
@@ -256,8 +297,9 @@ dotnet_diagnostic.IDE0130.severity = none
 
 # Override StyleCop rules
 dotnet_diagnostic.SA1011.severity = none # StyleCop 1.1.118 false positive on nullable array syntax (Type[]?)
+dotnet_diagnostic.SA1010.severity = none # StyleCop 1.1.118 predates C# 12 collection expressions ([...])
 dotnet_diagnostic.SA1124.severity = none
-dotnet_diagnostic.SA1309.severity = none
+dotnet_diagnostic.SA1309.severity = none # Private fields are '_camelCase'; parameters are 'camelCase'
 dotnet_diagnostic.SA1633.severity = none
 dotnet_diagnostic.SA1201.severity = none # Temporary. Remove once StyleCop supports .NET 10 feature.
 
