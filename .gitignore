@@ -442,3 +442,6 @@ FodyWeavers.xsd
 
 # Shared skill reached by junction point from C:\Source\Signalbox\skills\devops-git-conventions (see REPO-SETUP.md in the Signalbox repo); never commit the junction
 .claude/skills/devops-git-conventions/
+
+# Shared skill reached by junction point from C:\Source\Signalbox\skills\code-software-standards (see REPO-SETUP.md in the Signalbox repo); never commit the junction
+.claude/skills/code-software-standards/

@@ -5,6 +5,8 @@
 - **2026-10-17 (attended session with Matt):** the `devops-git-conventions` skill is now junctioned here and
   listed in the skills section, and this file gains the commit-scope list that skill requires each repository
   to hold. Nothing else changed.
+- **2026-10-17, evening (attended session with Matt):** the `code-software-standards` skill is now junctioned here
+  and listed with the other skills. Nothing else changed.
 
 Orientation for Claude Code sessions in this repo. Roadbed.Net.Mcp is the guarded HTTP fetch primitive
 exposed as an MCP server over stdio: one tool, `Get`, HTTPS-only, four-zone destination validation, manual
@@ -36,13 +38,14 @@ reason, and its shape is not documented here; Matt places it per machine.
 
 ## Skills: reached by junction, owned by Matt
 
-`.claude/skills/` holds 3 Windows junctions, never copies, each gitignored (`REPO-SETUP.md` in the Signalbox repo):
+`.claude/skills/` holds 4 Windows junctions, never copies, each gitignored (`REPO-SETUP.md` in the Signalbox repo):
 
 | Skill | Home | What it governs |
 |---|---|---|
 | `code-csharp-standards` | `C:\Source\Signalbox\skills\` | House C# rules: file layout, type taxonomy, method shape, the 500-line ceiling, allowed language features (C# 14). Its enforceable half is `src/.editorconfig` plus the analyzers |
 | `code-roadbed-csharp` | `C:\Source\Roadbed\skills\` | Code that consumes the vendored `Roadbed.*` libraries |
 | `devops-git-conventions` | `C:\Source\Signalbox\skills\` | Git: trunk-based `feature/` and `hotfix/` branches, Conventional Commits with the 72-character subject and the verification line in every body, pull requests, merge commits, SortVer tags. Binds every commit here, whoever makes it, and every commit message a hand-back proposes. It carries no scope list; this repo's is below |
+| `code-software-standards` | `C:\Source\Signalbox\skills\` | The language-neutral half of the house code standards, read before the language skill: the data-versus-behavior shape test, SOLID as review checks, behavior-class and data-type rules, method shape, error boundaries, the 500-line ceiling, ambient state as a dependency. A language skill refines it and never relaxes it |
 
 ⛔ **Matt owns every skill. Never edit a file under `.claude/skills/`**, however wrong it looks; report the
 defect in your hand-back. Each skill there is a Windows junction to its home repo, never a copy, and gitignored
