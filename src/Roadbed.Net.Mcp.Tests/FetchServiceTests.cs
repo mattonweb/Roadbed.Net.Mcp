@@ -264,6 +264,38 @@ public sealed class FetchServiceTests
         Assert.AreEqual(FetchOutcome.Ok, result.Outcome);
     }
 
+    [TestMethod]
+    public async Task PassiveCloudflareScript_IsOkNotBlocked()
+    {
+        // Cloudflare injects this script into ordinary, readable pages on sites that use its
+        // bot management. It is not a challenge: the page content is untouched.
+        var handler = new StubHttpMessageHandler()
+            .RouteBody("https://example.com/", TestFactory.Fixture("cloudflare-passive-jsd.html"));
+
+        var result = await TestFactory.Fetcher(handler, new StubAddressResolver())
+            .GetAsync("https://example.com/");
+
+        Assert.AreEqual(FetchOutcome.Ok, result.Outcome);
+        Assert.IsTrue(result.Ok);
+    }
+
+    [TestMethod]
+    public async Task ChallengeFixture_IsStillBlocked_AndCarriesTheNarrowedPathOnItsOwn()
+    {
+        var fixture = TestFactory.Fixture("challenge-cloudflare.html");
+
+        // Guards the narrowing itself: if a later edit drops the "/h/" lines from the fixture,
+        // this fails loudly instead of leaving the page detected only by "cf_chl_opt".
+        StringAssert.Contains(fixture, "/cdn-cgi/challenge-platform/h/");
+
+        var handler = new StubHttpMessageHandler().RouteBody("https://example.com/", fixture);
+
+        var result = await TestFactory.Fetcher(handler, new StubAddressResolver())
+            .GetAsync("https://example.com/");
+
+        Assert.AreEqual(FetchOutcome.Blocked, result.Outcome);
+    }
+
     #endregion
 
     #region Outcomes

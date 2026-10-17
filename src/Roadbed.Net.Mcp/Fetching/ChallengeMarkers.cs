@@ -17,13 +17,19 @@ namespace Roadbed.Net.Mcp.Fetching;
 /// form - are deliberately absent: a false <c>blocked</c> is the same wrong-and-final
 /// conclusion in the other direction.
 /// </para>
+/// <para>
+/// The bare "/cdn-cgi/challenge-platform" path was narrowed to the "/h/" and "/orchestrate/"
+/// segments: Cloudflare injects a passive bot-detection script under
+/// "/cdn-cgi/challenge-platform/scripts/jsd/" into ordinary, readable pages on sites that use
+/// its bot management, and that passive path was matching as if it were the challenge flow.
+/// </para>
 /// </remarks>
 internal static class ChallengeMarkers
 {
     #region Internal Fields
 
     /// <summary>The revision of the marker list, bumped whenever an entry changes.</summary>
-    public const string Version = "2026-08-29";
+    public const string Version = "2026-10-17";
 
     /// <summary>The markers, matched case-insensitively against a textual response body.</summary>
     public static readonly string[] All =
@@ -33,7 +39,8 @@ internal static class ChallengeMarkers
         "cf-browser-verification",
         "cf_chl_opt",
         "__cf_chl_",
-        "/cdn-cgi/challenge-platform",
+        "/cdn-cgi/challenge-platform/h/",
+        "/cdn-cgi/challenge-platform/orchestrate/",
         "checking your browser before accessing",
         "attention required! | cloudflare",
         "sorry, you have been blocked",
