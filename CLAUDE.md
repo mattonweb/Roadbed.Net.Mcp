@@ -1,5 +1,11 @@
 # CLAUDE.md — Roadbed.Net.Mcp
 
+## Recent changes (attended edits to this file — read, then carry on)
+
+- **2026-10-17 (attended session with Matt):** the `devops-git-conventions` skill is now junctioned here and
+  listed in the skills section, and this file gains the commit-scope list that skill requires each repository
+  to hold. Nothing else changed.
+
 Orientation for Claude Code sessions in this repo. Roadbed.Net.Mcp is the guarded HTTP fetch primitive
 exposed as an MCP server over stdio: one tool, `Get`, HTTPS-only, four-zone destination validation, manual
 redirects re-validated hop by hop, per-host politeness, a per-session cap, raw body returned. The README,
@@ -30,16 +36,22 @@ reason, and its shape is not documented here; Matt places it per machine.
 
 ## Skills: reached by junction, owned by Matt
 
-`.claude/skills/` holds 2 Windows junctions, never copies, each gitignored (`REPO-SETUP.md` in the Signalbox repo):
+`.claude/skills/` holds 3 Windows junctions, never copies, each gitignored (`REPO-SETUP.md` in the Signalbox repo):
 
 | Skill | Home | What it governs |
 |---|---|---|
 | `code-csharp-standards` | `C:\Source\Signalbox\skills\` | House C# rules: file layout, type taxonomy, method shape, the 500-line ceiling, allowed language features (C# 14). Its enforceable half is `src/.editorconfig` plus the analyzers |
 | `code-roadbed-csharp` | `C:\Source\Roadbed\skills\` | Code that consumes the vendored `Roadbed.*` libraries |
+| `devops-git-conventions` | `C:\Source\Signalbox\skills\` | Git: trunk-based `feature/` and `hotfix/` branches, Conventional Commits with the 72-character subject and the verification line in every body, pull requests, merge commits, SortVer tags. Binds every commit here, whoever makes it, and every commit message a hand-back proposes. It carries no scope list; this repo's is below |
 
 ⛔ **Matt owns every skill. Never edit a file under `.claude/skills/`**, however wrong it looks; report the
 defect in your hand-back. Each skill there is a Windows junction to its home repo, never a copy, and gitignored
 (`REPO-SETUP.md` in the Signalbox repo), so an edit through it lands in another repo's working tree.
+
+**Commit scopes (`devops-git-conventions` section 3): one scope per commit, from this list, or none when the
+change spans the repository.** `get` (the one tool and its validation, redirect and politeness rules); `deps` (package and vendored-DLL updates), `skills` (junctions and their gitignore lines), `charter` (this file).
+A scope that is not here is added to this list in its own commit before the commit that uses it; never invented in
+the commit. Listed 2026-10-17 from the scopes this repo's history already used (`git log --format=%s | grep -oE '^[a-z]+\([^)]+\)'`) and its project layout.
 
 **The 500-line ceiling (`code-csharp-standards` section 8): the named-exception list for this repo is EMPTY.** No production file exceeds it today (measured 2026-10-15, counting every line, excluding test
 projects, generated and designer files and migrations). A file that needs to exceed the ceiling gets its entry here,
