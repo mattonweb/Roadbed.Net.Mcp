@@ -2,6 +2,11 @@
 
 ## Recent changes (attended edits to this file — read, then carry on)
 
+- **2026-10-18, later (attended session with Matt):** three lines added to the working agreement from your own findings on the
+  first run through it (BO-055, pull request #12): keep git commands free of redirects and pipes; write the pull-request body
+  file in your session scratchpad, outside the repository; and when the guardrail hook refuses a command for its SHAPE rather
+  than its rule, re-issue it once in the plain charter form. Also: the Leaders-hub display name of your leader is `CTO v2`,
+  with the space. Nothing else changed.
 - **2026-10-18 (attended session with Matt): YOUR WORKING AGREEMENT CHANGED. You now branch, commit, push and open
   draft pull requests yourself, as this repository's own GitHub App ("Coding Agent for Roadbed.Net.Mcp"); Matt
   reviews and merges.** This repository is the pilot for the pipeline's author loop; the *Working agreement* section
@@ -45,14 +50,21 @@ nothing after it. In order, for every piece of work:
    workflow). Your commits are authored as the app automatically; never set `user.name` or `user.email` yourself.
 4. **Build green and run the tests before you push.** State the counts in the hand-back.
 5. **Push the branch and open a DRAFT pull request in the same hand-off**: `git push -u origin feature/<topic>`,
-   then `gh pr create --draft --title "<the commit subject form>" --body-file <a file you wrote>`. The description
-   has four parts, why, what, verification, follow-ups, in the shape of
-   `.claude/skills/devops-git-conventions/assets/pull-request-template.md`. `gh` acts as the app in your session.
+   then `gh pr create --draft --title "<the commit subject form>" --body-file <a file you wrote>`. Write that file in
+   your session's scratchpad, never inside the repository. The description has four parts, why, what, verification,
+   follow-ups, in the shape of `.claude/skills/devops-git-conventions/assets/pull-request-template.md`. `gh` acts as the
+   app in your session.
 6. **Read the checks and the review.** `gh pr checks` shows the pull-request checks; `gh pr view --comments`
    shows review comments. A red check or a requested change is yours: fix it, commit, push the same branch
    (never force), and the checks run again.
 7. **When the work is complete and the checks are green, mark it ready**: `gh pr ready`. Then hand back on the
    hub, naming the pull request number, the branch, and the build and test counts.
+
+**Run every git command plain: no redirects (`2>&1`, `> file`) and no pipes (`| tail`) on the same line.** The
+guardrail hook reads the whole line, and a redirect token can be mistaken for an argument; read git's output as it comes.
+If the hook refuses a command and its reason names the command's *shape* rather than a rule (for example a redirect read
+as a push target), re-issue the command once in the plain form above. If the reason names a rule (push to `main`, merge,
+reset), it is a stop: hand back, do not retry.
 
 **Matt is the reviewer and the only one who merges.** Until the pipeline's review agents exist, he stands in for
 them at S24, and `main` takes pull requests only.
@@ -151,5 +163,5 @@ Every message you send ends with this section, even when it is empty:
 - [ ] @<Owner> — <what to do, in one line>  //<when>
 ```
 
-or exactly: `There are no new action items associated with this message.` Owners: `@Matt` `@CTOv2`
+or exactly: `There are no new action items associated with this message.` Owners: `@Matt` `@CTOv2` (on the hub, address the leader by the roster's display name, `CTO v2`, with the space)
 `@RoadbedNetMcp`. The block is addressed to the recipient: every item's owner is the recipient or you.
