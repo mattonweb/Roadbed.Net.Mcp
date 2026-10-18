@@ -445,3 +445,6 @@ FodyWeavers.xsd
 
 # Shared skill reached by junction point from C:\Source\Signalbox\skills\code-software-standards (see REPO-SETUP.md in the Signalbox repo); never commit the junction
 .claude/skills/code-software-standards/
+
+# Shared hook reached by junction point from C:\Source\Signalbox\tools\git-guardrail (see REPO-SETUP.md in the Signalbox repo); never commit the junction
+.claude/hooks/git-guardrail/
