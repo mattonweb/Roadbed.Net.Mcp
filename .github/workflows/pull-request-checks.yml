@@ -12,6 +12,6 @@ permissions:
 
 jobs:
   checks:
-    uses: mattonweb/Signalbox/.github/workflows/reusable-pull-request-checks.yml@2026.1018.1
+    uses: mattonweb/Signalbox/.github/workflows/reusable-pull-request-checks.yml@2026.1018.2
     with:
       solution-path: "src/Roadbed.Net.Mcp.slnx"
