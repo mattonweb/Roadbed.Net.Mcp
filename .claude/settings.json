@@ -13,6 +13,20 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "timeout": 10,
+            "statusMessage": "git guardrail (branch)",
+            "command": "python \"${CLAUDE_PROJECT_DIR}/.claude/hooks/git-guardrail/git_guardrail.py\" --profile branch --log \"$HOME/.claude/git-guardrail-denies.jsonl\""
+          }
+        ]
+      }
     ]
   },
   "permissions": {

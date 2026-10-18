@@ -2,6 +2,11 @@
 
 ## Recent changes (attended edits to this file — read, then carry on)
 
+- **2026-10-17, late (attended session with Matt):** a git-guardrail hook is wired in `.claude/settings.json`, reached by
+  junction at `.claude/hooks/git-guardrail` from the Signalbox repo (gitignored). Profile `branch`: it refuses `git commit`
+  and `git push` on `main` and allows them only on `feature/*` or `hotfix/*` branches; merge, rebase, reset and the
+  destructive shapes are refused everywhere. Your working agreement is unchanged and still binds; the hook is a floor
+  under it, and a refusal names the rule. Nothing else changed.
 - **2026-10-17 (attended session with Matt):** the `devops-git-conventions` skill is now junctioned here and
   listed in the skills section, and this file gains the commit-scope list that skill requires each repository
   to hold. Nothing else changed.
