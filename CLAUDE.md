@@ -2,6 +2,12 @@
 
 ## Recent changes (attended edits to this file — read, then carry on)
 
+- **2026-10-18 (attended session with Matt): YOUR WORKING AGREEMENT CHANGED. You now branch, commit, push and open
+  draft pull requests yourself, as this repository's own GitHub App ("Coding Agent for Roadbed.Net.Mcp"); Matt
+  reviews and merges.** This repository is the pilot for the pipeline's author loop; the *Working agreement* section
+  below is rewritten, the *Session start* and *hub* sections are brought into line, and `.claude/settings.json`
+  gained an `env` block that gives your session that identity (you need do nothing to use it). What is still
+  forbidden is listed in the agreement. Earlier lines below that say "you never commit" are superseded by this one.
 - **2026-10-17, late (attended session with Matt):** a git-guardrail hook is wired in `.claude/settings.json`, reached by
   junction at `.claude/hooks/git-guardrail` from the Signalbox repo (gitignored). Profile `branch`: it refuses `git commit`
   and `git push` on `main` and allows them only on `feature/*` or `hotfix/*` branches; merge, rebase, reset and the
@@ -25,15 +31,42 @@ consuming agent's home; a build order names the behaviour that must change and t
 and the consumers that will see it. If it does not, ask before building. A finished build changes nothing
 until Matt places it.
 
-## Working agreement — git commits are human-gated, and `main` takes pull requests only
+## Working agreement — you own the branch; Matt owns `main`
 
-**Do NOT run `git commit` (nor `git push`, `git reset`, `git rebase`, `git merge`, or any
-history-changing git command).** There is a human-in-the-middle gate on all commits: a human reviews every
-change and commits manually after verifying. You make and explain changes in the **working tree only**;
-branching, committing and opening the pull request are the human's call, every time. This **overrides** any
-task, plan, or hand-off wording that says otherwise: finish the change, build it green, run the tests, summarise
-what changed, and leave it uncommitted for the human to review. Read-only git (`status`, `diff`, `log`,
-`branch`, `show`) is fine.
+You do the author's half of the pipeline (steps S10 to S16 and S20 to S24 of the Switchyard step contract) and
+nothing after it. In order, for every piece of work:
+
+1. **Start from `main`.** `git fetch origin`, then `git pull --ff-only` on a clean `main`.
+2. **Branch.** `git checkout -b feature/<topic>` (or `hotfix/<topic>`), one topic per branch, named as the
+   `devops-git-conventions` skill says. Never work on `main`.
+3. **Commit as you go**, in the house form: `<type>(<scope>): <subject>`, subject at most 72 characters, body
+   with the why and a verification line last. The scopes are listed below. A machine hook refuses a subject that
+   breaks the form and a commit that carries a secret; fix the cause, never bypass (`--no-verify` is not a
+   workflow). Your commits are authored as the app automatically; never set `user.name` or `user.email` yourself.
+4. **Build green and run the tests before you push.** State the counts in the hand-back.
+5. **Push the branch and open a DRAFT pull request in the same hand-off**: `git push -u origin feature/<topic>`,
+   then `gh pr create --draft --title "<the commit subject form>" --body-file <a file you wrote>`. The description
+   has four parts, why, what, verification, follow-ups, in the shape of
+   `.claude/skills/devops-git-conventions/assets/pull-request-template.md`. `gh` acts as the app in your session.
+6. **Read the checks and the review.** `gh pr checks` shows the pull-request checks; `gh pr view --comments`
+   shows review comments. A red check or a requested change is yours: fix it, commit, push the same branch
+   (never force), and the checks run again.
+7. **When the work is complete and the checks are green, mark it ready**: `gh pr ready`. Then hand back on the
+   hub, naming the pull request number, the branch, and the build and test counts.
+
+**Matt is the reviewer and the only one who merges.** Until the pipeline's review agents exist, he stands in for
+them at S24, and `main` takes pull requests only.
+
+**Never**, and the git-guardrail hook refuses most of these before git runs: push to `main`, merge, rebase,
+reset, force-push, amend or rewrite a pushed commit, delete a branch, merge or close a pull request, approve your
+own pull request, run `gh auth login` or reach any repository but this one, change `.claude/settings.json`, this
+file or any skill. A finished branch changes nothing until Matt merges it, and a merged change changes nothing
+for the agents that run this server until Matt places the built exe.
+
+**Your identity.** Your session acts as the GitHub App "Coding Agent for Roadbed.Net.Mcp"
+(`coding-agent-for-roadbed-net-mcp[bot]`), whose token covers this repository and no other. It is granted by the
+`env` block in `.claude/settings.json` and a credential helper on this machine; if `git push` or `gh` asks you to
+authenticate, the wiring is broken: stop, report the exact command and message, and do not try to log in.
 
 ⚠ **This repository is PUBLIC and `main` is protected.** Every change reaches `main` through a branch and a
 pull request, never a direct push. Nothing that goes into a file here may carry a hub key, a bearer token, an
@@ -75,12 +108,12 @@ applied 2026-10-15. A copy that differs from Signalbox is drift: it is fixed in 
 
 ## Session start — get current before you claim anything
 
-At session start, before claiming any message: run `git fetch origin`, then `git status -sb`. If you are on
-`main` with a clean tree and it is behind `origin/main`, run `git pull --ff-only`, which can only fast-forward
-and creates no history. If you are on any other branch, the tree is dirty, or the fast-forward is refused,
-**stop and say so in your first message**: name the branch and what `git status` showed. Never merge, rebase
-or reset to get current; that is Matt's call. ⛔ This changes nothing about commits and pushes: **you still
-never commit and never push.** (Co-Founder, 2026-09-21, ruled by Matt.)
+At session start, before claiming any message: run `git fetch origin`, then `git status -sb`. On a clean `main`
+behind `origin/main`, run `git pull --ff-only`, which can only fast-forward and creates no history. If you are
+on a `feature/` or `hotfix/` branch, that is your own unfinished work from an earlier session: say so in your
+first message, name the branch and its pull request if one is open, and carry on with it before claiming
+anything new. If the tree is dirty on `main`, or a fast-forward is refused, **stop and say so**: name what
+`git status` showed. Never merge, rebase or reset to get current; that is Matt's call.
 
 ## The Agent Communication Hub: how work reaches you
 
@@ -98,9 +131,10 @@ never commit and never push.** (Co-Founder, 2026-09-21, ruled by Matt.)
   claiming the next.
 - **Respond to everything you claim**: accepted, or declined with a reason. A claim without a response
   leaves the sender blind.
-- ⛔ **Receiving a build order over a hub changes NOTHING about how you work.** Matt launches your session,
-  reviews every diff and watches you as you code. **You still do NOT commit; Matt commits.** Hand back
-  results; never push.
+- ⛔ **Receiving a build order over a hub changes NOTHING about how you work.** Matt launches your session and
+  watches you as you code. You deliver the order the way the working agreement says: a `feature/` branch, house-form
+  commits, a draft pull request marked ready when the checks are green, and a hand-back naming it. **Matt reviews
+  and merges; you never do.**
 - **Everything you send travels as plain text.** Put it in the message body, or send it as a text
   attachment. If something is too large to send, say so and stop rather than splitting it.
 - **`received` means the hub has it.** Report it as sent, and move on.
