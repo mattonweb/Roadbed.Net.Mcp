@@ -1,0 +1,17 @@
+# Pull-request checks: restore, build and unit-test the solution on every pull request.
+# The logic lives in the Signalbox repository's reusable workflow, pinned to a version tag; this file only
+# names the solution. Contract: https://github.com/mattonweb/Signalbox/blob/main/docs/reusable-pull-request-checks.md
+
+name: Pull request checks
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: mattonweb/Signalbox/.github/workflows/reusable-pull-request-checks.yml@2026.1018.1
+    with:
+      solution-path: "src/Roadbed.Net.Mcp.slnx"
