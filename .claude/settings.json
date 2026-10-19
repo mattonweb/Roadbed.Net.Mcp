@@ -88,9 +88,9 @@
     "GIT_CONFIG_VALUE_1": "!\"$HOME/bin/agent-git-credential/git-credential-github-app.exe\"",
     "GIT_CONFIG_KEY_2": "credential.useHttpPath",
     "GIT_CONFIG_VALUE_2": "true",
-    "GIT_AUTHOR_NAME": "Coding Agent for Roadbed.Net.Mcp",
-    "GIT_AUTHOR_EMAIL": "344514595+coding-agent-for-roadbed-net-mcp[bot]@users.noreply.github.com",
-    "GIT_COMMITTER_NAME": "Coding Agent for Roadbed.Net.Mcp",
-    "GIT_COMMITTER_EMAIL": "344514595+coding-agent-for-roadbed-net-mcp[bot]@users.noreply.github.com"
+    "GIT_AUTHOR_NAME": "Coding Agent - Roadbed.Net.Mcp",
+    "GIT_AUTHOR_EMAIL": "344514595+coding-agent-roadbed-net-mcp[bot]@users.noreply.github.com",
+    "GIT_COMMITTER_NAME": "Coding Agent - Roadbed.Net.Mcp",
+    "GIT_COMMITTER_EMAIL": "344514595+coding-agent-roadbed-net-mcp[bot]@users.noreply.github.com"
   }
 }
