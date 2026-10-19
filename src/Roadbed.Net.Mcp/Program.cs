@@ -46,10 +46,7 @@ internal static class Program
         builder.Services.AddSingleton(BuildHttpClient(config));
         builder.Services.AddSingleton<IFetchService, FetchService>();
 
-        builder.Services
-            .AddMcpServer()
-            .WithStdioServerTransport()
-            .WithTools([typeof(GetTools)]);
+        builder.Services.AddGetToolServer();
 
         await builder.Build().RunAsync();
         return 0;

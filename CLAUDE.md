@@ -2,6 +2,12 @@
 
 ## Recent changes (attended edits to this file — read, then carry on)
 
+- **2026-10-18, later (attended session with Matt):** the working agreement is now a pointer at the author loop in the
+  `devops-git-conventions` skill (`references/author-loop.md`), which carries the loop, the never-list and the lessons
+  of the first runs (one `gh pr checks --watch` as the wait, `git commit -F` for long messages, read-only reads of the
+  Signalbox checkout, `gh` from the Bash tool only, the order number as the only provenance in a public repository, a
+  conflicting branch handed back). This file keeps only what is specific to this repository. Nothing about what you
+  may do changed; where it is written did.
 - **2026-10-18, later (attended session with Matt):** three lines added to the working agreement from your own findings on the
   first run through it (BO-055, pull request #12): keep git commands free of redirects and pipes; write the pull-request body
   file in your session scratchpad, outside the repository; and when the guardrail hook refuses a command for its SHAPE rather
@@ -37,54 +43,30 @@ and the consumers that will see it. If it does not, ask before building. A finis
 until Matt places it.
 
 ## Working agreement — you own the branch; Matt owns `main`
+You deliver work by the **author loop** in the `devops-git-conventions` skill:
+`.claude/skills/devops-git-conventions/references/author-loop.md`. Read it at session start. It is your working
+agreement: start from `main`, branch `feature/<topic>`, commit in the house form, build and test, push and open a
+draft pull request with `gh`, wait for the checks once, mark ready when green, hand back naming the pull request,
+and after the merge return to `main`. It also carries the never-list and the practicalities earlier runs taught.
+This section adds only what is specific to this repository.
 
-You do the author's half of the pipeline (steps S10 to S16 and S20 to S24 of the Switchyard step contract) and
-nothing after it. In order, for every piece of work:
+- **Your identity:** the GitHub App "Coding Agent for Roadbed.Net.Mcp" (`coding-agent-for-roadbed-net-mcp[bot]`), whose token covers this
+  repository and no other, granted by the `env` block in `.claude/settings.json` and a credential helper on this
+  machine. Run `gh` from the Bash tool; from PowerShell it is the bare CLI and will ask you to log in, which means
+  "use Bash", not "log in". If `git push` or `gh` under Bash asks you to authenticate, the wiring is broken: stop,
+  report the exact command and message, and do not try to log in.
+- **What a merge changes downstream:** the built exe is placed by hand into each consuming agent's home; a merged change changes nothing for any agent until Matt places it.
+- **`main`:** `main` is protected on GitHub and takes pull requests only.
+- **Matt is the reviewer and the only one who merges.** Until the pipeline's review agents exist, he stands in for
+  them at S24.
 
-1. **Start from `main`.** `git fetch origin`, then `git pull --ff-only` on a clean `main`.
-2. **Branch.** `git checkout -b feature/<topic>` (or `hotfix/<topic>`), one topic per branch, named as the
-   `devops-git-conventions` skill says. Never work on `main`.
-3. **Commit as you go**, in the house form: `<type>(<scope>): <subject>`, subject at most 72 characters, body
-   with the why and a verification line last. The scopes are listed below. A machine hook refuses a subject that
-   breaks the form and a commit that carries a secret; fix the cause, never bypass (`--no-verify` is not a
-   workflow). Your commits are authored as the app automatically; never set `user.name` or `user.email` yourself.
-4. **Build green and run the tests before you push.** State the counts in the hand-back.
-5. **Push the branch and open a DRAFT pull request in the same hand-off**: `git push -u origin feature/<topic>`,
-   then `gh pr create --draft --title "<the commit subject form>" --body-file <a file you wrote>`. Write that file in
-   your session's scratchpad, never inside the repository. The description has four parts, why, what, verification,
-   follow-ups, in the shape of `.claude/skills/devops-git-conventions/assets/pull-request-template.md`. `gh` acts as the
-   app in your session.
-6. **Read the checks and the review.** `gh pr checks` shows the pull-request checks; `gh pr view --comments`
-   shows review comments. A red check or a requested change is yours: fix it, commit, push the same branch
-   (never force), and the checks run again.
-7. **When the work is complete and the checks are green, mark it ready**: `gh pr ready`. Then hand back on the
-   hub, naming the pull request number, the branch, and the build and test counts.
+**This repository is public and its `main` branch is protected: every change lands by pull request.** Nothing
+internal goes into it: no keys, no credentials, no customer or infrastructure detail, and no more about the
+company's agents than this file needs to say. The order number alone (for example `BO-058`) may appear in a commit
+body or pull-request description. If a build order would put anything else internal into the tree, decline it
+and say why.
 
-**Run every git command plain: no redirects (`2>&1`, `> file`) and no pipes (`| tail`) on the same line.** The
-guardrail hook reads the whole line, and a redirect token can be mistaken for an argument; read git's output as it comes.
-If the hook refuses a command and its reason names the command's *shape* rather than a rule (for example a redirect read
-as a push target), re-issue the command once in the plain form above. If the reason names a rule (push to `main`, merge,
-reset), it is a stop: hand back, do not retry.
-
-**Matt is the reviewer and the only one who merges.** Until the pipeline's review agents exist, he stands in for
-them at S24, and `main` takes pull requests only.
-
-**Never**, and the git-guardrail hook refuses most of these before git runs: push to `main`, merge, rebase,
-reset, force-push, amend or rewrite a pushed commit, delete a branch, merge or close a pull request, approve your
-own pull request, run `gh auth login` or reach any repository but this one, change `.claude/settings.json`, this
-file or any skill. A finished branch changes nothing until Matt merges it, and a merged change changes nothing
-for the agents that run this server until Matt places the built exe.
-
-**Your identity.** Your session acts as the GitHub App "Coding Agent for Roadbed.Net.Mcp"
-(`coding-agent-for-roadbed-net-mcp[bot]`), whose token covers this repository and no other. It is granted by the
-`env` block in `.claude/settings.json` and a credential helper on this machine; if `git push` or `gh` asks you to
-authenticate, the wiring is broken: stop, report the exact command and message, and do not try to log in.
-
-⚠ **This repository is PUBLIC and `main` is protected.** Every change reaches `main` through a branch and a
-pull request, never a direct push. Nothing that goes into a file here may carry a hub key, a bearer token, an
-internal seat name beyond what this working agreement already uses, or anything about customers or
-infrastructure — that includes the hub's address. The MCP client config (`.mcp.json`) is gitignored for that
-reason, and its shape is not documented here; Matt places it per machine.
+Read-only git (`status`, `diff`, `log`, `show`, `branch`) is always fine.
 
 ## Skills: reached by junction, owned by Matt
 
