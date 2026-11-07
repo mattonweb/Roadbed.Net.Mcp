@@ -75,7 +75,9 @@
       "Bash(ls /c/Workspace/Assemblies/:*)",
       "Bash(ls C:/Workspace/Assemblies/:*)",
       "Bash(sha256sum:*)",
-      "PowerShell(Copy-Item C:\\Workspace\\Assemblies\\:*)"
+      "PowerShell(Copy-Item C:\\Workspace\\Assemblies\\:*)",
+      "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File tools\\publish-mcp.ps1:*)",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File tools/publish-mcp.ps1:*)"
     ],
     "deny": [
       "Read(**/.env)",
