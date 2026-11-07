@@ -69,7 +69,13 @@
       "PowerShell(Get-Process:*)",
       "PowerShell(Select-Object:*)",
       "PowerShell(dotnet build:*)",
-      "PowerShell(dotnet test:*)"
+      "PowerShell(dotnet test:*)",
+      "Bash(cp /c/Workspace/Assemblies/:*)",
+      "Bash(cp C:/Workspace/Assemblies/:*)",
+      "Bash(ls /c/Workspace/Assemblies/:*)",
+      "Bash(ls C:/Workspace/Assemblies/:*)",
+      "Bash(sha256sum:*)",
+      "PowerShell(Copy-Item C:\\Workspace\\Assemblies\\:*)"
     ],
     "deny": [
       "Read(**/.env)",
@@ -77,6 +83,9 @@
       "Read(**/secrets/**)",
       "Bash(cat secrets:*)",
       "Bash(cat .env:*)"
+    ],
+    "additionalDirectories": [
+      "C:\\Workspace\\Assemblies"
     ]
   },
   "env": {

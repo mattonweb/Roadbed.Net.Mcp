@@ -2,6 +2,11 @@
 
 ## Recent changes (attended edits to this file — read, then carry on)
 
+- **2026-11-07 (attended session with Matt):** you may now read and copy from `C:\Workspace\Assemblies`
+  (`.claude/settings.json` gained the folder under `additionalDirectories` plus `cp`, `Copy-Item`, `ls` and
+  `sha256sum` rules against it), so a Build Order can carry a re-vendor step instead of waiting on Matt's hand
+  copy. The new section "Re-vendoring from `C:\Workspace\Assemblies`" says the rest: only on an order, copy
+  into the repo's own `src\`, never retarget a `HintPath`. Nothing else changed.
 - **2026-10-21 (attended session with Matt):** your Build Orders now live on `main` of the private repository
   `agent-technology-build-plans`; the hub message is the notice naming the order's path and commit, and you read the
   order through the contents API as your own app (the author loop, skill 1.0.5, section 0). Your pull request names
@@ -76,6 +81,23 @@ body or pull-request description. If a build order would put anything else inter
 and say why.
 
 Read-only git (`status`, `diff`, `log`, `show`, `branch`) is always fine.
+
+### Re-vendoring from `C:\Workspace\Assemblies` happens on a leader's order, never on your own
+
+`C:\Workspace\Assemblies\Roadbed`, `C:\Workspace\Assemblies\SiteContentPolicy` and
+`C:\Workspace\Assemblies\Wanted` are the drop folders Matt publishes each shared library's latest Release into.
+You may read them and copy out of them (`.claude/settings.json` allows `cp`, `Copy-Item`, `ls` and `sha256sum`
+against them), so that a Build Order can carry a re-vendor step instead of waiting on Matt's hand copy.
+
+- **Only when an order says so.** You re-vendor when a Build Order from your leader names the folder, the files
+  and the destination. A drop folder being newer than your copy is not an order. This repo takes a new version
+  on its own schedule, the way it takes a NuGet update; never re-vendor as a side step of other work.
+- **Copy, never retarget.** The files land where the `HintPath` already points (the repo's own `src\`), and the
+  `.csproj` keeps pointing at that committed copy. Never point a `HintPath` or a `ProjectReference` at
+  `C:\Workspace\Assemblies`: the repo builds from what it has committed, on every machine.
+- **The hand-back carries the evidence.** For each file copied: the drop-folder file's date, and the old and
+  new size and SHA-256 (`sha256sum` before and after the copy). Commit with the `deps` scope, then build and
+  test. A vendored update that breaks the build is reported in the hand-back, not patched around.
 
 ## Skills: reached by junction, owned by Matt
 
