@@ -2,6 +2,18 @@
 
 ## Recent changes (attended edits to this file — read, then carry on)
 
+- **2026-11-07, later (attended session with Matt):** the exe now has a maintained version: the csproj holds
+  `<Version>1.1.0</Version>` with the source-revision suffix off, and the working agreement gained the bullet
+  "The version moves with the change". Nothing else changed.
+- **2026-11-07 (attended session with Matt):** `tools/publish-mcp.ps1` now exists and is the one path into
+  `C:\Workspace\Apps\Roadbed.Net.Mcp`, which every consuming agent's `.mcp.json` names. It is a deploy: run only when a Build
+  Order says to publish. The two sentences about the exe being placed by hand are rewritten; the `publish` scope is added;
+  `.claude/settings.json` allows exactly `powershell -NoProfile -ExecutionPolicy Bypass -File tools\publish-mcp.ps1`.
+- **2026-11-07 (attended session with Matt):** you may now read and copy from `C:\Workspace\Assemblies`
+  (`.claude/settings.json` gained the folder under `additionalDirectories` plus `cp`, `Copy-Item`, `ls` and
+  `sha256sum` rules against it), so a Build Order can carry a re-vendor step instead of waiting on Matt's hand
+  copy. The new section "Re-vendoring from `C:\Workspace\Assemblies`" says the rest: only on an order, copy
+  into the repo's own `src\`, never retarget a `HintPath`. Nothing else changed.
 - **2026-10-21 (attended session with Matt):** your Build Orders now live on `main` of the private repository
   `agent-technology-build-plans`; the hub message is the notice naming the order's path and commit, and you read the
   order through the contents API as your own app (the author loop, skill 1.0.5, section 0). Your pull request names
@@ -46,10 +58,10 @@ redirects re-validated hop by hop, per-host politeness, a per-session cap, raw b
 skill describes the vendored framework conventions. Read them first. This file is the working agreement that
 governs how work reaches this repo and leaves it.
 
-**A change here ships to every agent that runs this server.** The built exe is placed by hand into each
-consuming agent's home; a build order names the behaviour that must change and the behaviour that must not,
-and the consumers that will see it. If it does not, ask before building. A finished build changes nothing
-until Matt places it.
+**A change here ships to every agent that runs this server.** The built exe is published into
+`C:\Workspace\Apps\Roadbed.Net.Mcp`, which each consuming agent's `.mcp.json` names; a build order names the behavior that
+must change and the behavior that must not, and the consumers that will see it. If it does not, ask before building. A
+finished build changes nothing until the exe is published, and a merge is not a publish.
 
 ## Working agreement — you own the branch; Matt owns `main`
 You deliver work by the **author loop** in the `devops-git-conventions` skill:
@@ -64,7 +76,8 @@ This section adds only what is specific to this repository.
   machine. Run `gh` from the Bash tool; from PowerShell it is the bare CLI and will ask you to log in, which means
   "use Bash", not "log in". If `git push` or `gh` under Bash asks you to authenticate, the wiring is broken: stop,
   report the exact command and message, and do not try to log in.
-- **What a merge changes downstream:** the built exe is placed by hand into each consuming agent's home; a merged change changes nothing for any agent until Matt places it.
+- **What a merge changes downstream:** nothing, until the exe is published. `tools/publish-mcp.ps1` is the one path into `C:\Workspace\Apps\Roadbed.Net.Mcp`, the folder every seat whose `.mcp.json` names it (three operations seats today) runs the exe from, run as `powershell -NoProfile -ExecutionPolicy Bypass -File tools\publish-mcp.ps1` from the repository root. **It is a deploy, and you run it only when a Build Order says to publish**, never as a side step of a merge or because a merge landed: the next session each consuming seat starts runs the new build. It refuses unless the checkout is a clean `main` equal to `origin/main` and no process is running from that folder, cleans and publishes Release (single-file, win-x64, framework-dependent, from the project's own properties), mirrors the output into the folder, and writes `publish-manifest.json` beside the exe (commit, version, each file's size and SHA-256). Quote the manifest's commit, the version and the exe's SHA-256 in the hand-back; the order names the seats that run the exe, and their leaders are told through it.
+- **The version moves with the change.** `<Version>` in `Roadbed.Net.Mcp.csproj`, with the source-revision suffix off, says which build a seat is running; `publish-manifest.json` records it beside the commit. A pull request that changes the tool, its validation, redirect or politeness rules, or what it returns moves it in the same commit (a fix moves the patch, an addition the minor, a breaking change the major); one that changes none of those leaves it alone. The hand-back names the version; a change without a version move is incomplete.
 - **`main`:** `main` is protected on GitHub and takes pull requests only.
 - **Matt is the reviewer and the only one who merges.** Until the pipeline's review agents exist, he stands in for
   them at S24.
@@ -76,6 +89,23 @@ body or pull-request description. If a build order would put anything else inter
 and say why.
 
 Read-only git (`status`, `diff`, `log`, `show`, `branch`) is always fine.
+
+### Re-vendoring from `C:\Workspace\Assemblies` happens on a leader's order, never on your own
+
+`C:\Workspace\Assemblies\Roadbed`, `C:\Workspace\Assemblies\SiteContentPolicy` and
+`C:\Workspace\Assemblies\Wanted` are the drop folders Matt publishes each shared library's latest Release into.
+You may read them and copy out of them (`.claude/settings.json` allows `cp`, `Copy-Item`, `ls` and `sha256sum`
+against them), so that a Build Order can carry a re-vendor step instead of waiting on Matt's hand copy.
+
+- **Only when an order says so.** You re-vendor when a Build Order from your leader names the folder, the files
+  and the destination. A drop folder being newer than your copy is not an order. This repo takes a new version
+  on its own schedule, the way it takes a NuGet update; never re-vendor as a side step of other work.
+- **Copy, never retarget.** The files land where the `HintPath` already points (the repo's own `src\`), and the
+  `.csproj` keeps pointing at that committed copy. Never point a `HintPath` or a `ProjectReference` at
+  `C:\Workspace\Assemblies`: the repo builds from what it has committed, on every machine.
+- **The hand-back carries the evidence.** For each file copied: the drop-folder file's date, and the old and
+  new size and SHA-256 (`sha256sum` before and after the copy). Commit with the `deps` scope, then build and
+  test. A vendored update that breaks the build is reported in the hand-back, not patched around.
 
 ## Skills: reached by junction, owned by Matt
 
@@ -93,7 +123,7 @@ defect in your hand-back. Each skill there is a Windows junction to its home rep
 (`REPO-SETUP.md` in the Signalbox repo), so an edit through it lands in another repo's working tree.
 
 **Commit scopes (`devops-git-conventions` section 3): one scope per commit, from this list, or none when the
-change spans the repository.** `get` (the one tool and its validation, redirect and politeness rules); `deps` (package and vendored-DLL updates), `skills` (junctions and their gitignore lines), `charter` (this file).
+change spans the repository.** `get` (the one tool and its validation, redirect and politeness rules); `deps` (package and vendored-DLL updates), `skills` (junctions and their gitignore lines), `publish` (the publish script under `tools/`), `charter` (this file).
 A scope that is not here is added to this list in its own commit before the commit that uses it; never invented in
 the commit. Listed 2026-10-17 from the scopes this repo's history already used (`git log --format=%s | grep -oE '^[a-z]+\([^)]+\)'`) and its project layout.
 

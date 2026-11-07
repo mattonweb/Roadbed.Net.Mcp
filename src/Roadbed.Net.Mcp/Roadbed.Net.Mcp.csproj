@@ -11,6 +11,18 @@
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
+  <!--
+    THE VERSION SAYS WHICH BUILD A SEAT IS RUNNING. tools\publish-mcp.ps1 deploys this exe into
+    C:\Workspace\Apps\Roadbed.Net.Mcp and records this number in publish-manifest.json beside the commit;
+    the pull request that changes the tool, its validation, redirect or politeness rules, or what it returns moves it in the same commit, under
+    semantic versioning (a fix moves the patch, an addition the minor, a breaking change the major). The
+    source-revision suffix is off so the number is the whole informational version.
+  -->
+  <PropertyGroup>
+    <Version>1.1.0</Version>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
   <!-- Single-file publish: every publish (any profile, or `dotnet publish`) produces one
        self-launching .exe. Framework-dependent (needs the .NET 10 runtime installed);
        set SelfContained to true for a fully standalone exe. -->
