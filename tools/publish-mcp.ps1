@@ -13,15 +13,20 @@
       1. the checkout is on the branch named by -Branch (main);
       2. the working tree is clean (no modified, staged, deleted or untracked files: an untracked .cs would compile);
       3. HEAD equals origin/<branch> after a fetch, so an unmerged or unpushed commit can never be deployed;
-      4. dotnet is on the path;
-      5. no process is running from the destination folder: a running MCP server holds its exe open, and a copy
-         over it fails or leaves a half-written file.
+      4. dotnet is on the path.
 
     It then cleans and publishes the project in Release into a staging folder under %TEMP% (the project's own
     publish properties decide single-file, runtime and self-contained), checks every required file is present,
-    mirrors the staging folder into the destination (files the publish did not produce are removed and named, so a
-    stale file cannot run by mistake), and writes publish-manifest.json beside the exe: repository, product
-    version, commit, branch, UTC time, machine, and each file's size and SHA-256. The same values are printed, so a
+    and swaps the staging folder into the destination:
+      - a destination file that no process holds open is overwritten;
+      - a destination file that a running session holds open (a stdio MCP server keeps its exe mapped for the
+        life of the session) is RENAMED ASIDE to <name>.<utc-stamp>.previous and the new file copied in. Windows
+        permits renaming a running executable, so the running session keeps its binary under the new name and
+        every session started afterwards gets the new build. Nothing waits and nothing is killed;
+      - files the publish did not produce are removed and named, so a stale file cannot run by mistake;
+      - .previous files from earlier runs are deleted once nothing holds them; one still held is left and named.
+    It writes publish-manifest.json beside the exe: repository, product version, commit, branch, UTC time,
+    machine, each file's size and SHA-256, and which files were renamed aside. The same values are printed, so a
     hand-back can quote them.
 
     Pull-request checks already built and tested the merged commit; this script does not run the test suites.
@@ -36,7 +41,9 @@
     Windows PowerShell 5.1 compatible: no pipeline-chain operators, no ternary, no stderr redirection of native
     commands. The same script, with different defaults, lives in each repository that publishes an MCP exe under
     C:\Workspace\Apps; the folder name is the exe's base name. It is the publish-assemblies.ps1 body plus the
-    running-process guard.
+    rename-aside swap. "In use" is decided by trying to open the file for writing, never by listing processes:
+    a process another session or elevation level started may hide its path from this one, and the lock is the
+    fact that matters.
 #>
 [CmdletBinding()]
 param(
@@ -55,6 +62,7 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $projectPath = Join-Path $repoRoot $Project
 $manifestName = "publish-manifest.json"
+$previousSuffix = ".previous"
 
 function Stop-Refused {
     param([string]$Reason)
@@ -81,6 +89,39 @@ function Invoke-Checked {
     if ($LASTEXITCODE -ne 0) {
         Stop-Refused "$Label failed: $Command exited with $LASTEXITCODE."
     }
+}
+
+function Test-FileHeld {
+    # True when something holds the file so that it cannot be overwritten: the probe asks for write access with
+    # no sharing. A mapped executable or an open log both answer "held"; a missing file answers "not held".
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path)) { return $false }
+    try {
+        $stream = [System.IO.File]::Open($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::None)
+        $stream.Close()
+        return $false
+    }
+    catch [System.IO.IOException] {
+        return $true
+    }
+    catch [System.UnauthorizedAccessException] {
+        return $true
+    }
+}
+
+function Get-HoldersDescription {
+    # Best effort, for the report only: the processes this session can see running from the folder.
+    param([string]$Folder)
+    $holders = @()
+    foreach ($process in @(Get-Process -ErrorAction SilentlyContinue)) {
+        $path = $null
+        try { $path = $process.Path } catch { $path = $null }
+        if ($null -ne $path -and $path.StartsWith($Folder + "\", [System.StringComparison]::OrdinalIgnoreCase)) {
+            $holders += ("{0} (pid {1}, started {2:HH:mm:ss})" -f $process.ProcessName, $process.Id, $process.StartTime)
+        }
+    }
+    if ($holders.Count -eq 0) { return "a process this session cannot see" }
+    return ($holders -join "; ")
 }
 
 Write-Host "Repository: $repoRoot ($Repository)"
@@ -125,22 +166,6 @@ if ($headSha -ne $originSha) {
     Stop-Refused "HEAD ($headSha) is not origin/$Branch ($originSha). Only a merged, pushed $Branch is published: pull, or push, then run again."
 }
 
-$destinationFull = $Destination
-if (Test-Path -LiteralPath $Destination) {
-    $destinationFull = (Resolve-Path -LiteralPath $Destination).Path
-}
-$running = @()
-foreach ($process in @(Get-Process -ErrorAction SilentlyContinue)) {
-    $path = $null
-    try { $path = $process.Path } catch { $path = $null }
-    if ($null -ne $path -and $path.StartsWith($destinationFull + "\", [System.StringComparison]::OrdinalIgnoreCase)) {
-        $running += ("{0} (pid {1}) {2}" -f $process.ProcessName, $process.Id, $path)
-    }
-}
-if ($running.Count -gt 0) {
-    Stop-Refused ("a process is running from the destination; wait for its session to end, then run again:`n  " + ($running -join "`n  "))
-}
-
 $headSummary = (Invoke-GitRead @("log", "-1", "--format=%h %ad %s", "--date=short")) | Select-Object -First 1
 Write-Host "Publishing commit $headSummary"
 Write-Host ""
@@ -167,29 +192,63 @@ try {
         Stop-Refused ("the publish produced no " + ($missing -join ", ") + " in $staging.")
     }
 
-    # ------------------------------------------------------------ mirror into the destination
+    # ------------------------------------------------------------ swap into the destination
 
     if (-not (Test-Path -LiteralPath $Destination)) {
         New-Item -ItemType Directory -Path $Destination | Out-Null
+    }
+    $destinationFull = (Resolve-Path -LiteralPath $Destination).Path
+
+    # Earlier runs' renamed-aside files: delete the ones nothing holds any more.
+    $previousKept = @()
+    foreach ($old in @(Get-ChildItem -LiteralPath $Destination -File -Filter ("*" + $previousSuffix))) {
+        if (Test-FileHeld -Path $old.FullName) {
+            $previousKept += $old.Name
+        }
+        else {
+            Remove-Item -LiteralPath $old.FullName -Force
+        }
     }
 
     $produced = @(Get-ChildItem -LiteralPath $staging -File | Where-Object { $_.Name -like $Include })
     if ($produced.Count -eq 0) {
         Stop-Refused "no produced file matches -Include '$Include'."
     }
+
+    $stamp = [DateTime]::UtcNow.ToString("yyyyMMddTHHmmssZ")
+    $renamedAside = @()
     $producedNames = @{}
     foreach ($file in $produced) {
         $producedNames[$file.Name] = $true
-        Copy-Item -LiteralPath $file.FullName -Destination (Join-Path $Destination $file.Name) -Force
+        $target = Join-Path $Destination $file.Name
+        if (Test-FileHeld -Path $target) {
+            $asideName = $file.Name + "." + $stamp + $previousSuffix
+            try {
+                Move-Item -LiteralPath $target -Destination (Join-Path $Destination $asideName) -Force
+            }
+            catch {
+                Stop-Refused ("{0} is held by {1} and could not be renamed aside: {2}" -f $file.Name, (Get-HoldersDescription -Folder $destinationFull), $_.Exception.Message)
+            }
+            $renamedAside += ("{0} -> {1} (held by {2})" -f $file.Name, $asideName, (Get-HoldersDescription -Folder $destinationFull))
+        }
+        Copy-Item -LiteralPath $file.FullName -Destination $target -Force
     }
 
     $removed = @()
     foreach ($existing in @(Get-ChildItem -LiteralPath $Destination -File)) {
         if ($existing.Name -eq $manifestName) { continue }
+        if ($existing.Name.EndsWith($previousSuffix)) { continue }
         if ($Keep -contains $existing.Name) { continue }
         if (-not $producedNames.ContainsKey($existing.Name)) {
-            Remove-Item -LiteralPath $existing.FullName -Force
-            $removed += $existing.Name
+            if (Test-FileHeld -Path $existing.FullName) {
+                $asideName = $existing.Name + "." + $stamp + $previousSuffix
+                Move-Item -LiteralPath $existing.FullName -Destination (Join-Path $Destination $asideName) -Force
+                $removed += ($existing.Name + " (held; renamed aside as " + $asideName + ")")
+            }
+            else {
+                Remove-Item -LiteralPath $existing.FullName -Force
+                $removed += $existing.Name
+            }
         }
     }
 
@@ -198,7 +257,7 @@ try {
     $firstRequired = Join-Path $Destination $RequiredFiles[0]
     $version = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($firstRequired).ProductVersion
     $files = @()
-    foreach ($file in @(Get-ChildItem -LiteralPath $Destination -File | Where-Object { $_.Name -ne $manifestName } | Sort-Object Name)) {
+    foreach ($file in @(Get-ChildItem -LiteralPath $Destination -File | Where-Object { $_.Name -ne $manifestName -and -not $_.Name.EndsWith($previousSuffix) } | Sort-Object Name)) {
         $hash = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
         $entry = [ordered]@{ name = $file.Name; bytes = $file.Length; sha256 = $hash }
         if ($file.Extension -eq ".exe" -or $file.Extension -eq ".dll") {
@@ -216,6 +275,8 @@ try {
         branch               = $Branch
         publishedUtc         = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
         machine              = $env:COMPUTERNAME
+        renamedAside         = $renamedAside
+        previousStillHeld    = $previousKept
         removed              = $removed
         files                = $files
     }
@@ -230,6 +291,15 @@ try {
     Write-Host ""
     foreach ($entry in $files) {
         Write-Host ("  {0,-48} {1,12:N0}  {2}" -f $entry.name, $entry.bytes, $entry.sha256)
+    }
+    if ($renamedAside.Count -gt 0) {
+        Write-Host ""
+        Write-Host "  renamed aside (a running session keeps the old build until it ends):" -ForegroundColor Yellow
+        foreach ($line in $renamedAside) { Write-Host "    $line" -ForegroundColor Yellow }
+    }
+    if ($previousKept.Count -gt 0) {
+        Write-Host ""
+        Write-Host ("  still held from earlier runs, left in place: " + ($previousKept -join ", ")) -ForegroundColor Yellow
     }
     if ($removed.Count -gt 0) {
         Write-Host ""
