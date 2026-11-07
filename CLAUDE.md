@@ -2,6 +2,9 @@
 
 ## Recent changes (attended edits to this file — read, then carry on)
 
+- **2026-11-07, later (attended session with Matt):** the exe now has a maintained version: the csproj holds
+  `<Version>1.1.0</Version>` with the source-revision suffix off, and the working agreement gained the bullet
+  "The version moves with the change". Nothing else changed.
 - **2026-11-07 (attended session with Matt):** `tools/publish-mcp.ps1` now exists and is the one path into
   `C:\Workspace\Apps\Roadbed.Net.Mcp`, which every consuming agent's `.mcp.json` names. It is a deploy: run only when a Build
   Order says to publish. The two sentences about the exe being placed by hand are rewritten; the `publish` scope is added;
@@ -74,6 +77,7 @@ This section adds only what is specific to this repository.
   "use Bash", not "log in". If `git push` or `gh` under Bash asks you to authenticate, the wiring is broken: stop,
   report the exact command and message, and do not try to log in.
 - **What a merge changes downstream:** nothing, until the exe is published. `tools/publish-mcp.ps1` is the one path into `C:\Workspace\Apps\Roadbed.Net.Mcp`, the folder every seat whose `.mcp.json` names it (three operations seats today) runs the exe from, run as `powershell -NoProfile -ExecutionPolicy Bypass -File tools\publish-mcp.ps1` from the repository root. **It is a deploy, and you run it only when a Build Order says to publish**, never as a side step of a merge or because a merge landed: the next session each consuming seat starts runs the new build. It refuses unless the checkout is a clean `main` equal to `origin/main` and no process is running from that folder, cleans and publishes Release (single-file, win-x64, framework-dependent, from the project's own properties), mirrors the output into the folder, and writes `publish-manifest.json` beside the exe (commit, version, each file's size and SHA-256). Quote the manifest's commit, the version and the exe's SHA-256 in the hand-back; the order names the seats that run the exe, and their leaders are told through it.
+- **The version moves with the change.** `<Version>` in `Roadbed.Net.Mcp.csproj`, with the source-revision suffix off, says which build a seat is running; `publish-manifest.json` records it beside the commit. A pull request that changes the tool, its validation, redirect or politeness rules, or what it returns moves it in the same commit (a fix moves the patch, an addition the minor, a breaking change the major); one that changes none of those leaves it alone. The hand-back names the version; a change without a version move is incomplete.
 - **`main`:** `main` is protected on GitHub and takes pull requests only.
 - **Matt is the reviewer and the only one who merges.** Until the pipeline's review agents exist, he stands in for
   them at S24.
